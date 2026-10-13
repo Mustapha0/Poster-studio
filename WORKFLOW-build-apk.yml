@@ -1,0 +1,181 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Check project files
+        run: |
+          test -f dist/index.html || { echo "ERROR: dist/index.html is missing - upload the whole dist folder"; exit 1; }
+          test -f package.json || { echo "ERROR: package.json is missing"; exit 1; }
+          test -f capacitor.config.json || { echo "ERROR: capacitor.config.json is missing"; exit 1; }
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Add Gallery PNG saver plugin
+        run: |
+          SRC=android/app/src/main/java/com/offlineposterstudio/app
+          mkdir -p "$SRC"
+          cat > "$SRC/GallerySaverPlugin.java" <<'JAVA'
+          package com.offlineposterstudio.app;
+
+          import android.content.ContentValues;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Environment;
+          import android.provider.MediaStore;
+          import android.util.Base64;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.io.OutputStream;
+          import java.io.IOException;
+
+          @CapacitorPlugin(name = "GallerySaver")
+          public class GallerySaverPlugin extends Plugin {
+            @PluginMethod
+            public void savePng(PluginCall call) {
+              String filename = call.getString("filename", "poster.png");
+              String data = call.getString("data", "");
+              if (data == null || data.isEmpty()) {
+                call.reject("No PNG data provided");
+                return;
+              }
+              filename = filename.replaceAll("[^A-Za-z0-9._ -]", "_");
+              if (!filename.toLowerCase().endsWith(".png")) filename += ".png";
+              byte[] bytes;
+              try { bytes = Base64.decode(data, Base64.DEFAULT); }
+              catch (IllegalArgumentException ex) { call.reject("Invalid PNG data", ex); return; }
+
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Offline Poster Studio");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
+                Uri uri = null;
+                try {
+                  uri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                  if (uri == null) throw new IOException("Could not create Gallery item");
+                  try (OutputStream out = getContext().getContentResolver().openOutputStream(uri)) {
+                    if (out == null) throw new IOException("Could not open Gallery item");
+                    out.write(bytes);
+                  }
+                  ContentValues done = new ContentValues();
+                  done.put(MediaStore.Images.Media.IS_PENDING, 0);
+                  getContext().getContentResolver().update(uri, done, null, null);
+                  JSObject result = new JSObject();
+                  result.put("ok", true);
+                  result.put("uri", uri.toString());
+                  result.put("location", "Pictures/Offline Poster Studio/" + filename);
+                  call.resolve(result);
+                } catch (Exception ex) {
+                  if (uri != null) try { getContext().getContentResolver().delete(uri, null, null); } catch (Exception ignored) {}
+                  call.reject("Could not save PNG to Gallery", ex);
+                }
+              } else {
+                File pictures = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                File folder = new File(pictures, "Offline Poster Studio");
+                if (!folder.exists() && !folder.mkdirs()) { call.reject("Could not create Pictures folder"); return; }
+                File file = new File(folder, filename);
+                try (FileOutputStream out = new FileOutputStream(file)) {
+                  out.write(bytes);
+                  android.media.MediaScannerConnection.scanFile(getContext(), new String[]{file.getAbsolutePath()}, new String[]{"image/png"}, (path, uri) -> {});
+                  JSObject result = new JSObject();
+                  result.put("ok", true);
+                  result.put("uri", file.toURI().toString());
+                  result.put("location", "Pictures/Offline Poster Studio/" + filename);
+                  call.resolve(result);
+                } catch (Exception ex) { call.reject("Could not save PNG to Gallery", ex); }
+              }
+            }
+          }
+          JAVA
+          cat > "$SRC/MainActivity.java" <<'JAVA'
+          package com.offlineposterstudio.app;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              registerPlugin(GallerySaverPlugin.class);
+              super.onCreate(savedInstanceState);
+            }
+          }
+          JAVA
+          echo "Gallery saver plugin registered"
+          ls "$SRC"
+
+      - name: Allow saving exports to phone storage
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's#<application#<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n    <application android:requestLegacyExternalStorage="true"#' "$M"
+          grep -n "STORAGE\|requestLegacy" "$M"
+
+      - name: Apply app icon
+        run: |
+          RES=android/app/src/main/res
+          if [ -f app-icons.zip ]; then
+            unzip -oq app-icons.zip -d "$RES"
+            echo "Icon applied from app-icons.zip"
+          elif [ -d resources/android/res ]; then
+            cp -r resources/android/res/. "$RES"/
+            echo "Icon applied from resources folder"
+          else
+            echo "WARNING: no icon files uploaded (app-icons.zip) - building with the default icon"
+          fi
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk OfflinePosterStudio.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OfflinePosterStudio-apk
+          path: OfflinePosterStudio.apk
+
+      - name: Publish APK as a GitHub Release (direct download)
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Offline Poster Studio build ${{ github.run_number }}
+          files: OfflinePosterStudio.apk
