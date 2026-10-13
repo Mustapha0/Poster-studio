@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#4A39F1" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Offline Poster Studio</title>
+    <style>html,body,#root{margin:0;min-height:100%;}</style>
+    <script type="module" crossorigin src="./assets/index-CWDxAK4c.js"></script>
+
+<style id="ps-mobile-editor-reference">
+/* Mobile editor: canvas-first, touch-friendly layout inspired by the supplied reference. */
+@media (max-width: 720px) {
+  body:has(.ps-grid.ps-mode-edit) { background:#f3f5fa; }
+  .ps-app:has(.ps-grid.ps-mode-edit) { padding:0 0 calc(100px + env(safe-area-inset-bottom)); max-width:none; }
+  .ps-grid.ps-mode-edit { display:flex !important; flex-direction:column; gap:0 !important; padding:0 0 120px !important; min-height:calc(100dvh - 70px); }
+  .ps-grid.ps-mode-edit .ps-edit-rail { order:0; position:sticky; top:0; display:flex; flex-direction:row; justify-content:space-around; gap:4px; width:100%; box-sizing:border-box; border:0; border-bottom:1px solid #e1e6ef; border-radius:0; padding:8px 10px; background:#fff; box-shadow:0 2px 8px #17233b0b; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button { flex:1; min-width:0; min-height:64px; padding:6px 2px; font-size:20px; color:#34415a; border-radius:12px; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button small { font-size:11px; font-weight:600; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button.active { color:#2563eb; background:#e8efff; }
+  .ps-grid.ps-mode-edit .ps-stage-card { order:1; width:100%; box-sizing:border-box; border-radius:0; border:0; box-shadow:none; background:transparent; }
+  .ps-grid.ps-mode-edit .ps-stage { padding:10px 8px 0; }
+  .ps-grid.ps-mode-edit .ps-stagebar { display:flex; align-items:center; justify-content:flex-end; margin:0 4px 8px; min-height:36px; }
+  .ps-grid.ps-mode-edit .ps-stagebar > div:first-child { display:none; }
+  .ps-grid.ps-mode-edit .ps-actions { gap:5px; }
+  .ps-grid.ps-mode-edit .ps-actions .ps-btn { padding:7px 9px; font-size:11px; border-radius:10px; }
+  .ps-grid.ps-mode-edit .ps-canvas-wrap { min-height:0; max-height:calc(100dvh - 310px); overflow:auto; padding:12px 8px 18px; border-radius:0; background:#eef2f9; box-shadow:none; align-items:center; }
+  .ps-grid.ps-mode-edit .ps-poster { width:min(100%, 900px); max-width:100%; height:auto; border-radius:2px; box-shadow:0 8px 24px #17233b1a; }
+  .ps-grid.ps-mode-edit .ps-stage-foot { display:none; }
+  .ps-grid.ps-mode-edit .ps-content-form { order:2; grid-column:auto !important; grid-row:auto !important; margin:12px; border-radius:16px; }
+  /* Keep the poster as the main surface; reveal content fields when a non-text tool is chosen. */
+  .ps-grid.ps-mode-edit[data-tool="text"] .ps-content-form { display:none; }
+  .ps-grid.ps-mode-edit[data-ps-show-form="1"] .ps-content-form { display:block !important; }
+  .ps-grid.ps-mode-edit[data-tool="images"] .ps-content-form,
+  .ps-grid.ps-mode-edit[data-tool="layout"] .ps-content-form,
+  .ps-grid.ps-mode-edit[data-tool="theme"] .ps-content-form { display:block; }
+  .ps-typography-bar { left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; width:auto !important; transform:none !important; display:flex; flex-direction:column; gap:9px; padding:10px 12px; border-radius:22px; box-shadow:0 8px 30px #17233b24; }
+  .ps-typography-bar .ps-type-row { display:flex; align-items:center; justify-content:space-between; gap:7px; }
+  .ps-typography-bar .ps-type-row select { flex:1; min-width:0; max-width:none; min-height:44px; font-size:14px; padding:8px 12px; border-radius:13px; }
+  .ps-typography-bar .ps-type-row button { width:44px; height:44px; border-radius:13px; font-size:17px; }
+  .ps-typography-bar output { min-width:32px; text-align:center; font-size:16px; font-weight:700; }
+  .ps-bottom-tabs { display:none !important; }
+}
+@media (min-width:721px) {
+  .ps-grid.ps-mode-edit .ps-poster { width:min(100%, 900px); }
+}
+</style>
+
+
+<style id="ps-editor-complete">
+/* Editor workspace refinements: reference-style tool strip, large canvas, persistent selection controls. */
+.ps-grid.ps-mode-edit .ps-edit-rail button { font-family:inherit; }
+.ps-poster-editable svg { max-width:100%; height:auto; overflow:visible; }
+.ps-poster-editable svg text { touch-action: manipulation; }
+.ps-text-selection { vector-effect: non-scaling-stroke; }
+.__ps-text-edit-controls { position:fixed !important; left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; z-index:120 !important; width:auto !important; max-width:none !important; margin:0 !important; padding:10px !important; border-radius:18px !important; box-shadow:0 10px 35px #17233b2e !important; background:#fff !important; }
+.__ps-text-edit-controls button { min-height:42px !important; min-width:42px !important; touch-action:manipulation; }
+.ps-grid:has(.__ps-text-edit-controls) .ps-typography-bar { display:none !important; }
+@media(max-width:720px) {
+  .ps-app:has(.ps-grid.ps-mode-edit) { max-width:none !important; padding:0 0 calc(110px + env(safe-area-inset-bottom)) !important; }
+  .ps-grid.ps-mode-edit { display:flex !important; flex-direction:column !important; gap:0 !important; padding:0 0 135px !important; }
+  .ps-grid.ps-mode-edit .ps-edit-rail { order:0 !important; position:sticky !important; top:0 !important; z-index:30 !important; width:100% !important; display:flex !important; flex-direction:row !important; justify-content:space-around !important; gap:3px !important; padding:7px 6px !important; box-sizing:border-box !important; background:#fff !important; border:0 !important; border-bottom:1px solid #dfe5ef !important; border-radius:0 !important; box-shadow:0 3px 12px #18233b0d !important; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button { flex:1 1 0 !important; min-width:0 !important; min-height:60px !important; padding:5px 1px !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:3px !important; border-radius:10px !important; font-size:20px !important; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button small { font-size:10px !important; line-height:1.1 !important; }
+  .ps-grid.ps-mode-edit .ps-edit-rail button.active { background:#e6edff !important; color:#1d5fd1 !important; }
+  .ps-grid.ps-mode-edit .ps-content-form { order:3 !important; margin:10px !important; border-radius:16px !important; }
+  .ps-grid.ps-mode-edit[data-tool="text"] .ps-content-form { display:none !important; }
+  .ps-grid.ps-mode-edit[data-ps-show-form="1"] .ps-content-form { display:block !important; }
+  .ps-grid.ps-mode-edit[data-tool="images"] .ps-content-form,
+  .ps-grid.ps-mode-edit[data-tool="layout"] .ps-content-form,
+  .ps-grid.ps-mode-edit[data-tool="theme"] .ps-content-form { display:block !important; }
+  .ps-grid.ps-mode-edit .ps-stage-card { order:1 !important; width:100% !important; max-width:none !important; box-sizing:border-box !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:transparent !important; }
+  .ps-grid.ps-mode-edit .ps-stage { padding:4px 0 0 !important; }
+  .ps-grid.ps-mode-edit .ps-stagebar { margin:0 8px 5px !important; min-height:30px !important; }
+  .ps-grid.ps-mode-edit .ps-stagebar > div:first-child { display:none !important; }
+  .ps-grid.ps-mode-edit .ps-actions { gap:4px !important; flex-wrap:nowrap !important; overflow-x:auto !important; max-width:100% !important; }
+  .ps-grid.ps-mode-edit .ps-actions .ps-btn { flex:0 0 auto !important; padding:6px 8px !important; font-size:10px !important; }
+  .ps-grid.ps-mode-edit .ps-canvas-wrap { width:100% !important; box-sizing:border-box !important; min-height:0 !important; max-height:calc(100dvh - 290px) !important; overflow:auto !important; display:flex !important; align-items:flex-start !important; justify-content:center !important; padding:8px 5px 16px !important; background:#edf1f8 !important; border-radius:0 !important; box-shadow:none !important; }
+  .ps-grid.ps-mode-edit .ps-poster-editable { flex:0 0 auto !important; width:100% !important; max-width:none !important; margin:0 auto !important; line-height:0 !important; }
+  .ps-grid.ps-mode-edit .ps-poster-editable svg { width:100% !important; height:auto !important; display:block !important; }
+  .ps-grid.ps-mode-edit .ps-stage-foot { display:none !important; }
+  .ps-grid.ps-mode-edit .ps-typography-bar { left:8px !important; right:8px !important; bottom:calc(8px + env(safe-area-inset-bottom)) !important; width:auto !important; padding:8px !important; gap:6px !important; border-radius:18px !important; flex-direction:column !important; }
+  .ps-grid.ps-mode-edit .ps-typography-bar .ps-type-row { display:flex !important; justify-content:space-between !important; gap:6px !important; }
+  .ps-grid.ps-mode-edit .ps-typography-bar .ps-type-row select { flex:1 1 auto !important; min-width:0 !important; max-width:none !important; min-height:42px !important; font-size:14px !important; }
+  .ps-grid.ps-mode-edit .ps-typography-bar .ps-type-row button { flex:0 0 40px !important; width:40px !important; height:42px !important; }
+  .ps-grid.ps-mode-edit .ps-typography-bar output { min-width:28px !important; font-size:15px !important; }
+  .ps-bottom-tabs { display:none !important; }
+}
+@media(min-width:721px) {
+ .ps-grid.ps-mode-edit .ps-poster-editable { width:100% !important; max-width:1100px !important; }
+ .ps-grid.ps-mode-edit .ps-poster-editable svg { width:100% !important; height:auto !important; }
+}
+</style>
+<script id="ps-editor-complete-runtime">
+(() => {
+  const TEXT_STYLE_ATTRS = ['font-size','font-weight','font-style','text-decoration','text-anchor','fill','font-family'];
+  const keyForText = (el, index) => `${index}|${(el.textContent || '').replace(/\s+/g,' ').trim().slice(0,180)}`;
+  const storageKey = svg => {
+    const vb = svg.getAttribute('viewBox') || '';
+    const texts = [...svg.querySelectorAll('text')];
+    const signature = texts.slice(0,5).map(t => (t.textContent||'').replace(/\s+/g,' ').trim().slice(0,36)).join('|');
+    return `offline-poster-text-styles-v2:${vb}:${texts.length}:${signature}`;
+  };
+  const readStyles = key => { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } };
+  const saveStyles = svg => {
+    const key = storageKey(svg), saved = readStyles(key);
+    [...svg.querySelectorAll('text')].forEach((el, i) => {
+      const style = {};
+      TEXT_STYLE_ATTRS.forEach(attr => { if (el.hasAttribute(attr)) style[attr] = el.getAttribute(attr); });
+      if (Object.keys(style).length) saved[keyForText(el, i)] = style;
+    });
+    try { localStorage.setItem(key, JSON.stringify(saved)); } catch {}
+  };
+  const restoreStyles = svg => {
+    const saved = readStyles(storageKey(svg));
+    [...svg.querySelectorAll('text')].forEach((el, i) => {
+      const style = saved[keyForText(el, i)]; if (!style) return;
+      Object.entries(style).forEach(([attr, value]) => el.setAttribute(attr, value));
+      el.querySelectorAll('tspan').forEach(span => {
+        ['font-size','font-weight','font-style','text-decoration'].forEach(attr => { if (style[attr] != null) span.setAttribute(attr, style[attr]); });
+      });
+    });
+  };
+  const configureTextPersistence = svg => {
+    if (svg.dataset.psPersistBound) return;
+    svg.dataset.psPersistBound = '1';
+    restoreStyles(svg);
+    const observer = new MutationObserver(records => {
+      if (records.some(r => !r.target.closest?.('.__ps-text-selection'))) saveStyles(svg);
+    });
+    observer.observe(svg, {subtree:true, attributes:true, attributeFilter:TEXT_STYLE_ATTRS});
+  };
+  const setButton = (button, icon, label) => {
+    if (!button || button.dataset.psLabel === label) return;
+    button.dataset.psLabel = label;
+    button.setAttribute('aria-label', label);
+    button.innerHTML = `<span aria-hidden="true">${icon}</span><small>${label}</small>`;
+  };
+  const findField = text => [...document.querySelectorAll('.ps-label,label')].find(el => (el.textContent||'').toLowerCase().includes(text.toLowerCase()));
+  const scrollToField = text => {
+    const label = findField(text); const field = label?.closest('.ps-field') || label;
+    if (field) { const form = document.querySelector('.ps-content-form'); if(form) { form.style.display='block'; document.querySelector('.ps-grid.ps-mode-edit')?.setAttribute('data-ps-show-form','1'); } field.scrollIntoView({behavior:'smooth',block:'center'}); }
+  };
+  const buildRail = nav => {
+    if (!nav || nav.dataset.psComplete === '1') return;
+    const existing = [...nav.querySelectorAll('button')];
+    if (existing.length < 4) return;
+    nav.dataset.psComplete = '1';
+    const [textBtn, imageBtn, layoutBtn, themeBtn] = existing;
+    setButton(textBtn, 'T', 'Text'); setButton(imageBtn, '▧', 'Image'); setButton(layoutBtn, '◇', 'Shape'); setButton(themeBtn, '•••', 'More');
+    const edit = document.createElement('button');
+    edit.type='button'; edit.className='ps-reference-edit-tool'; edit.innerHTML='<span aria-hidden="true">▣</span><small>Edit</small>'; edit.setAttribute('aria-label','Edit');
+    edit.addEventListener('click', () => {
+      const form=document.querySelector('.ps-content-form'); if(!form) return;
+      const hidden=getComputedStyle(form).display==='none'; form.style.display=hidden?'block':'none';
+      const grid=document.querySelector('.ps-grid.ps-mode-edit'); if(grid) { if(hidden) grid.setAttribute('data-ps-show-form','1'); else grid.removeAttribute('data-ps-show-form'); }
+      if(hidden) form.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    nav.insertBefore(edit, textBtn);
+    const table = document.createElement('button');
+    table.type='button'; table.className='ps-reference-table-tool'; table.innerHTML='<span aria-hidden="true">▦</span><small>Table</small>'; table.setAttribute('aria-label','Table');
+    table.addEventListener('click', () => { scrollToField('KEY POINTS'); if(!document.querySelector('.ps-content-form')) scrollToField('MAIN TEXT'); });
+    nav.insertBefore(table, layoutBtn);
+    // Ensure tool order and labels remain stable after React replaces the rail.
+    nav.dataset.psComplete='1';
+  };
+  const enhance = () => {
+    document.querySelectorAll('.ps-edit-rail').forEach(buildRail);
+    document.querySelectorAll('.ps-poster-editable svg').forEach(configureTextPersistence);
+    document.querySelectorAll('.ps-poster-editable svg text').forEach(el => { el.style.pointerEvents='auto'; el.style.cursor='text'; });
+  };
+  const start = () => {
+    enhance();
+    const observer = new MutationObserver(() => enhance());
+    observer.observe(document.documentElement, {childList:true,subtree:true});
+    // Observe style changes made by the selection panel, then save selected text styling.
+    document.addEventListener('click', ev => {
+      if (ev.target.closest('.__ps-text-edit-controls')) setTimeout(() => { const svg=document.querySelector('.ps-poster-editable svg'); if(svg) saveStyles(svg); }, 0);
+    }, true);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true}); else start();
+})();
+</script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
