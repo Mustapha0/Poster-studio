@@ -1,0 +1,10 @@
+Offline Poster Studio update
+
+Changes in this build:
+- Added 12 original poster templates inspired by broad design categories seen in online poster galleries (editorial, event invitation, recipe, cafe menu, photo collage, achievement, contact information, before/after, certificate, announcement, personal story, and statistics infographic).
+- These templates use the app's existing SVG template renderer and are designed to work with portrait, square, and landscape formats where supported by the renderer.
+
+Important:
+- This package contains the compiled web app. It passed `node --check` for the main JavaScript bundle.
+- Please build/install the APK and test several different templates in landscape mode on-device. The source project files were not included in the uploaded archive, so a full source-level Android runtime test could not be performed here.
+- Templates are original implementations inspired by broad categories and visual approaches; they do not copy Canva's individual template artwork.
