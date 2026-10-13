@@ -1,0 +1,22 @@
+Offline Poster Studio update
+
+Changes in this package:
+- Added six original research poster templates to the template library:
+  1. Modern Academic Research
+  2. Scientific Results
+  3. Medical Research
+  4. Minimalist Research
+  5. Environmental Research
+  6. AI & Technology Research
+- The new templates use existing supported poster layouts and the app's built-in template renderer, so they remain editable and work with the existing poster editing/export flow.
+- Template designs are original and inspired by broad academic poster design conventions, not copied from Canva artwork.
+- Kept the existing GitHub Actions workflow for building an Android APK.
+
+Validation:
+- Ran Node.js syntax validation (`node --check`) on the updated compiled JavaScript bundle successfully.
+- This upload contains the compiled web app rather than the original application source. The APK build and on-device template rendering still need to be verified by GitHub Actions/device testing.
+
+Fix (latest):
+- The six research templates previously fell back to generic text and the same blue palette. Each now has its own starter content, font, background style and decorative shape.
+- Added three colour themes (Navy, Teal, Forest) used by Modern Academic, Medical and Environmental research. Scientific Results uses Showcase, AI & Technology uses Modern, Minimalist uses Minimalist.
+- Verified: bundle passes node --check, template ids are unique, all layouts exist, workflow and Capacitor config checked.
