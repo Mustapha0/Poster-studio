@@ -1,0 +1,41 @@
+Offline Poster Studio update
+
+Changes in this build:
+- Added 12 original poster templates inspired by broad design categories seen in online poster galleries (editorial, event invitation, recipe, cafe menu, photo collage, achievement, contact information, before/after, certificate, announcement, personal story, and statistics infographic).
+- These templates use the app's existing SVG template renderer and are designed to work with portrait, square, and landscape formats where supported by the renderer.
+
+Important:
+- This package contains the compiled web app. It passed `node --check` for the main JavaScript bundle.
+- Please build/install the APK and test several different templates in landscape mode on-device. The source project files were not included in the uploaded archive, so a full source-level Android runtime test could not be performed here.
+- Templates are original implementations inspired by broad categories and visual approaches; they do not copy Canva's individual template artwork.
+
+Research poster update (2026-10-13)
+- Added four original research poster templates designed for landscape conference posters: three-column, four-column, visual evidence/data, and environmental impact.
+- Each layout includes clearly separated academic sections and purpose-built chart/table/photo areas rather than reusing a generic card arrangement.
+- Long poster titles now reduce their font size when the title text is substantially longer than the layout's intended title length.
+- Existing typography toolbar (font family, size decrease/increase, bold, italic, underline, alignment) remains available in the editor.
+- Validation performed: JavaScript bundle passes `node --check`.
+- Not device-tested. Per-element tap-to-select text handles are not yet implemented in this compiled-only build; current typography size buttons still adjust the poster's overall text scale.
+
+Text selection and resizing update (2026-10-13)
+- The main poster preview now renders the generated SVG inline so individual text elements can be selected by tapping/clicking them.
+- A selection outline and purple resize handle appear around selected text. Drag the handle vertically to resize the selected text.
+- The contextual text toolbar provides A-/A+, bold, italic, underline, left/center/right alignment, and Done.
+- PNG export and Print now serialize the currently edited inline SVG so preview text adjustments are included in those outputs.
+- The text editing controls operate on the selected SVG text node in the current preview. If the user changes template/content and regenerates the poster, the selected-node adjustments may reset; they are not stored as separate editable project fields yet.
+- Validation performed: `node --check dist/assets/index-CWDxAK4c.js` passed. Android build/device testing is still required.
+
+Offline editor enhancement update (2026-10-13)
+- Added a bundled, network-free editor enhancement layer loaded by dist/index.html.
+- Adds bottom-sheet control panels for Elements, Stickers, Effects, Filters, Background, Brushes, Shapes, Templates, Layers, and Settings; Text, Images, Layout, and Theme open the enhancement controls from the existing rail as well.
+- Includes local theme palettes, text options, color swatches, filter/effect controls, curated emoji and SVG/text decorations, section visibility controls, recent uploaded images in localStorage, image opacity/corner controls, and editor Undo/Redo shortcuts/buttons.
+- Enhancements are plain JavaScript and CSS; no external assets or network requests are used. Existing app bundle and assets remain intact.
+- Validation performed: node --check passed for the main app bundle and the enhancement script. Device-level Android testing remains recommended.
+
+
+Bug-fix update (2026-10-13)
+- Fixed a syntax error in the main bundle that caused a blank screen.
+- Enhancement panels now edit the real poster (they were editing a toolbar icon); Fonts/Photo/Sections/Palettes are separate rail buttons; sliders/checkboxes fixed; Undo works on sliders.
+- Fixed oversized text in Compare Two, Question & Answer, Steps Flow, Stat Hero templates.
+- PNG/Print/SVG exports no longer include the text-selection handles; SVG export includes live edits.
+- Not device-tested. Some enhancement controls (columns, texture, brush width, filter intensity) only store a setting.
